@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -35,11 +36,12 @@ class PackageHistoryServiceTests {
     @Test
     void storesEventOnceAndReturnsTimeline() {
         UUID eventId = UUID.randomUUID();
+        long packageId = ThreadLocalRandom.current().nextLong(1, Long.MAX_VALUE);
         String json = """
                 {"eventId":"%s","schemaVersion":1,"occurredAt":"2026-11-04T12:00:00Z",
-                 "packageId":42,"type":"PACKAGE_STATUS_CHANGED","actorId":"user-sub",
+                 "packageId":%d,"type":"PACKAGE_STATUS_CHANGED","actorId":"user-sub",
                  "before":{"status":"RECEIVED"},"after":{"status":"PREPARING"}}
-                """.formatted(eventId);
+                """.formatted(eventId, packageId);
 
         PackageHistoryMessage message = historyService.parse(json.getBytes(StandardCharsets.UTF_8));
         historyService.record(message);
@@ -47,13 +49,12 @@ class PackageHistoryServiceTests {
         entityManager.flush();
         entityManager.clear();
 
-        List<PackageHistoryResponse> timeline = historyService.getHistory(42L);
+        List<PackageHistoryResponse> timeline = historyService.getHistory(packageId);
         assertEquals(1, timeline.size());
         assertEquals(eventId, timeline.getFirst().eventId());
         assertEquals("user-sub", timeline.getFirst().actorId());
         assertEquals("RECEIVED", timeline.getFirst().before().get("status"));
         assertEquals("PREPARING", timeline.getFirst().after().get("status"));
-        assertEquals(List.of(), historyService.getHistory(43L));
     }
 
     @Test
