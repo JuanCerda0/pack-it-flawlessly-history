@@ -25,3 +25,7 @@ curl -H "Authorization: Bearer $ACCESS_TOKEN" \
 - `./mvnw -Dhistory.rabbit.integration=true -Dtest=HistoryRabbitIntegrationTests test`: prueba optativa de consumo y deduplicación contra RabbitMQ y PostgreSQL locales.
 
 El contrato JSON de eventos está en `../pack-it-flawlessly-backend/docs/message-contracts.md`.
+
+## Docker local
+
+El [Compose del repositorio Paquetes](../pack-it-flawlessly-backend/compose.yaml) construye este servicio y le asigna su propia instancia PostgreSQL (`postgres-history`). Consulta el README de Paquetes para preparar `.env.compose`, levantar el clúster RabbitMQ y verificar el stack completo.
